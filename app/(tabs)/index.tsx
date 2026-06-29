@@ -11,10 +11,12 @@ import {
   Image,
   ScrollView,
   Animated,
+  Pressable,
 } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 
 const Index = () => {
   const [search, setSearch] = useState("");
@@ -152,10 +154,19 @@ scrollEventThrottle={16}
   contentContainerStyle={styles.cardRow}
 >
             {places.map((item, index) => (
-              <View
-               key={`${item.id}-${index}`}
-                style={styles.card}
-              >
+              <Pressable
+  key={`${item.id}-${index}`}
+  style={styles.card}
+  onPress={() =>
+
+  router.push({
+    pathname: "/details",
+    params: {
+      place: item.title,
+    },
+  })
+}
+>
                 
                 {/* BACK IMAGE LEFT */}
                 <Image
@@ -182,7 +193,7 @@ scrollEventThrottle={16}
                   {item.title}
                 </Text>
 
-              </View>
+              </Pressable>
             ))}
           </Animated.ScrollView>
 
