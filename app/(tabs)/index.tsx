@@ -66,6 +66,167 @@ const scrollRef = useRef<ScrollView | null>(null);
   ];
   const places = [...originalPlaces, ...originalPlaces];
  
+  
+ const cardPlace = {
+    Hill:[
+      { id:1,
+      title:"Kashmir",
+      image:"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"Manali",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"Darjeeling",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Shimla",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:5,
+  title:"Sikkim",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+}
+         ],
+    Sea:[
+      { id:1,
+      title:"Andaman",
+      image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"Goa",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"Kerala",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Lakshadweep",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:5,
+  title:"Pondicherry",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+}
+    ],
+    Desert:[
+      { id:1,
+      title:"Rajasthan",
+      image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"Gujarat",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"Kutch",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Jaisalmer",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:5,
+  title:"Bikaner",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop" }
+    ],
+    WildLife:[
+      { id:1,
+      title:"Gir Forest",
+      image:"https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=1200&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"Kaziranga",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"Sundarbans",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Periyar",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:5,
+  title:"Ranthambore",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+}
+    ],
+    Island:[
+      { id:1,
+      title:"Andaman",
+      image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"Lakshadweep",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"Sri Lanka",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Maldives",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:5,
+  title:"Bali",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+}
+    ],
+    Foreign:[
+      { id:1,
+      title:"Paris",
+      image:"https://images.unsplash.com/photo-1431274172761-fca41d930114?q=80&w=1200&auto=format&fit=crop"
+},
+{
+  id:2,
+  title:"New York",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:3,
+  title:"London",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+},
+{
+  id:4,
+  title:"Tokyo",
+  image:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1173&auto=format&fit=crop"
+},
+{
+  id:5,
+  title     :"Dubai",
+  image:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=1170&auto=format&fit=crop"
+}
+    ],
+  }
+  type PlaceType = keyof typeof cardPlace;
+
+const [selectedPlace, setSelectedPlace] = useState<PlaceType | null>("Hill");
 useEffect(() => {
   let currentOffset = 0;
   let currentIndex = 0;
@@ -157,15 +318,16 @@ scrollEventThrottle={16}
               <Pressable
   key={`${item.id}-${index}`}
   style={styles.card}
-  onPress={() =>
+//   onPress={() =>
 
-  router.push({
-    pathname: "/details",
-    params: {
-      place: item.title,
-    },
-  })
-}
+//   router.push({
+//     pathname: "/details",
+//     params: {
+//       place: item.title,
+//     },
+//   })
+// }
+onPress={() => setSelectedPlace(item.title as PlaceType)}
 >
                 
                 {/* BACK IMAGE LEFT */}
@@ -198,6 +360,56 @@ scrollEventThrottle={16}
           </Animated.ScrollView>
 
         </View>
+      <ScrollView>
+  {/* Horizontal category cards */}
+ {selectedPlace && (
+  
+  <View style={styles.destinationContainer}>
+    <Text style={styles.destinationTitle}>
+      {selectedPlace} Destinations
+    </Text>
+
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingHorizontal: 12,
+         paddingLeft: 18,
+      }}
+    >
+      {cardPlace[selectedPlace].map((item) => (
+       <Pressable
+  key={item.id}
+  style={styles.bigCard}
+  onPress={() =>
+    router.push({
+      pathname: "/details",
+      params: {
+        place: item.title,
+        image: item.image,
+      },
+    })
+  }
+>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.bigImage}
+          />
+
+          <View style={styles.overlay}>
+            <Text style={styles.bigTitle}>
+              {item.title}
+            </Text>
+
+           
+          </View>
+        </Pressable>
+      ))}
+    </ScrollView>
+  </View>
+)}
+
+ 
+</ScrollView>
 
       </ScrollView>
     </SafeAreaView>
@@ -207,6 +419,73 @@ scrollEventThrottle={16}
 export default Index;
 
 const styles = StyleSheet.create({
+  destinationContainer: {
+  marginTop: 25,
+},
+
+destinationTitle: {
+  fontSize: 24,
+  fontWeight: "700",
+  marginLeft: 18,
+  marginBottom: 15,
+},
+
+bigCard: {
+  width: 200,
+  height: 360,
+  marginRight: 18,
+  borderRadius: 24,
+  overflow: "hidden",
+  backgroundColor: "#fff",
+  elevation: 8,
+},
+
+bigImage: {
+  width: "100%",
+  height: "100%",
+},
+
+overlay: {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  padding: 18,
+  backgroundColor: "rgba(0,0,0,0.35)",
+},
+
+bigTitle: {
+  color: "#fff",
+  fontSize: 28,
+  fontWeight: "700",
+},
+
+location: {
+  color: "#fff",
+  fontSize: 16,
+  marginTop: 4,
+},
+//   bigCard: {
+//   backgroundColor: "#fff",
+//   marginTop: 18,
+//   borderRadius: 20,
+//   padding: 18,
+//   height: 220,
+//   elevation: 5,
+// },
+// bigImage: {
+//   backgroundColor: "#fff",
+//   marginTop: 28,
+//   borderRadius: 20,
+//   padding: 28,
+//   height: 200,
+//   elevation: 5,
+// },
+
+// bigTitle: {
+//   fontSize: 24,
+//   fontWeight: "700",
+// },
   container: {
     flex: 1,
     backgroundColor: "#fff",
