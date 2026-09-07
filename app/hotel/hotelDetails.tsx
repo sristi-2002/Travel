@@ -13,9 +13,37 @@ const HotelDetails = () => {
   const [adults, setadults] = useState(1);
 
 const roomPrice = 5000;
+//const nights = 2;
+const roomTypes = [
+  {
+    id: "single",
+    name: "Single Room",
+    bed: "1 Single Bed",
+    guests: "1 Adult",
+    price: 2000,
+  },
+  {
+    id: "double",
+    name: "Double Room",
+    bed: "1 Double Bed",
+    guests: "2 Adults",
+    price: 3500,
+  },
+  {
+    id: "deluxe",
+    name: "Deluxe Room",
+    bed: "1 King Size Bed",
+    guests: "2 Adults + 1 Child",
+    price: 5000,
+  },
+];
+
+const [selectedRoom, setSelectedRoom] = useState(roomTypes[0]);
+
 const nights = 2;
 
-const totalCost = roomPrice * rooms * nights;
+const totalCost = selectedRoom.price * rooms * nights;
+//const totalCost = roomPrice * rooms * nights;
   return (
   <ScrollView
     style={{ flex: 1 }}
@@ -97,6 +125,17 @@ const totalCost = roomPrice * rooms * nights;
   </View>
 </ScrollView>
 
+{/* Description Card */}
+
+<View style={styles.hotelbookingCard}>
+  
+{/* Amenities */}
+  <Text style={styles.hoteldescriptionTitle}>
+   Experience comfort and convenience at our beautiful hotel, designed to make every stay memorable. Enjoy spacious and well-appointed rooms, modern amenities, complimentary Wi-Fi, delicious dining options, and exceptional hospitality.
+Whether you're traveling for business or leisure, our hotel offers a relaxing environment and easy access to popular attractions and essential services. Book your stay with us and enjoy a comfortable, convenient, and unforgettable experience.
+
+  </Text>
+</View>
     {/* BOOKING CARD */}
     <Text style={styles.bookTitle}>
       Book Your Room
@@ -188,6 +227,43 @@ const totalCost = roomPrice * rooms * nights;
       </View>
 
     </View>
+
+<Text style={styles.sectionTitle}>Choose Your Room</Text>
+
+{roomTypes.map((room) => (
+  <Pressable
+    key={room.id}
+    style={[
+      styles.roomCard,
+      selectedRoom.id === room.id && styles.selectedRoomCard,
+    ]}
+    onPress={() => setSelectedRoom(room)}
+  >
+    <View>
+      <Text style={styles.roomName}>{room.name}</Text>
+
+      <View style={styles.roomDetail}>
+        <Ionicons name="bed-outline" size={18} />
+        <Text style={styles.roomText}>{room.bed}</Text>
+      </View>
+
+      <View style={styles.roomDetail}>
+        <Ionicons name="people-outline" size={18} />
+        <Text style={styles.roomText}>{room.guests}</Text>
+      </View>
+    </View>
+
+    <View style={styles.priceContainer}>
+      <Text style={styles.roomPrice}>
+        ₹{room.price.toLocaleString()}
+      </Text>
+
+      <Text style={styles.perNight}>per night</Text>
+    </View>
+  </Pressable>
+))}
+
+
 {/* FIXED BOTTOM BOOKING BAR */}
 <View style={styles.bottomContainer}>
 
@@ -208,11 +284,9 @@ const totalCost = roomPrice * rooms * nights;
     <Text style={styles.priceValue}>₹5,000</Text>
   </Pressable>
 
-
   {/* Check Out */}
   <Pressable style={styles.dateCard}>
     <Ionicons name="calendar-outline" color = "#ffffff" size={20} />
-
     <View>
       <Text style={styles.infoLabel}>Check-out</Text>
       <Text style={styles.infoValue}>14 Aug</Text>
@@ -335,7 +409,58 @@ fixedBottomBar: {
 
   elevation: 8,
 },
+roomCard: {
+  backgroundColor: "#fff",
+  marginHorizontal: 20,
+  marginBottom: 12,
+  padding: 15,
+  borderRadius: 15,
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  elevation: 3,
+  borderWidth: 1,
+  borderColor: "#eee",
+},
 
+selectedRoomCard: {
+  borderColor: "#00194a",
+  borderWidth: 2,
+},
+
+roomName: {
+  fontSize: 17,
+  fontWeight: "bold",
+  marginBottom: 8,
+},
+
+roomDetail: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 6,
+  marginTop: 4,
+},
+
+roomText: {
+  fontSize: 13,
+  color: "gray",
+},
+
+priceContainer: {
+  alignItems: "flex-end",
+},
+
+roomPrice: {
+  fontSize: 18,
+  fontWeight: "bold",
+  color: "#00194a",
+},
+
+perNight: {
+  fontSize: 11,
+  color: "gray",
+  marginTop: 3,
+},
 bottomItem: {
   flex: 1,
   flexDirection: "row",
@@ -417,7 +542,18 @@ amenityText: {
   marginTop: 20,
   marginBottom: 10,
 },
-
+hotelbookingCard: {
+  flexDirection: "row",
+  justifyContent: "space-around",
+  alignItems: "center",
+  backgroundColor: "#fff",
+  marginHorizontal: 20,
+  marginTop: 20,
+  marginBottom: 20,
+  paddingVertical: 15,
+  borderRadius: 15,
+  elevation: 3,
+},
 bookingCard: {
   flexDirection: "row",
   justifyContent: "space-around",
@@ -486,7 +622,7 @@ bookingLabel: {
     backgroundColor: "#fff",
     alignItems: "flex-start",
     borderRadius: 20,
-    marginTop: 30,
+    marginTop: 0,
     marginBottom: 30,
     marginLeft: 20,
     marginRight: 20,
@@ -500,6 +636,16 @@ bookingLabel: {
     marginTop: 10,
     marginBottom: 10,
     marginLeft: 10,
+  },
+   hoteldescriptionTitle:{
+    fontSize: 15,
+   // fontStyle: "italic",
+    marginTop: 20,
+    textAlign: "center",
+    color: "gray",
+    marginBottom: 10,
+    marginLeft: 10,
+    marginHorizontal: 20,
   },
    description:{
     fontSize: 20,
