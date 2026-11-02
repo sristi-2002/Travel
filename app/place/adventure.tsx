@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { HapticTab } from '@/components/haptic-tab';
+
 type Adventure = {
   id: string;
   name: string;

@@ -2,9 +2,9 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import React from 'react';
+
+import { useColorScheme } from '../hooks/use-color-scheme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -20,7 +20,6 @@ export default function RootLayout() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="details" />
         <Stack.Screen name="place/hotels" />
-     
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

@@ -35,9 +35,58 @@ type RoomOptions = {
   pool: boolean;
 };
 
+const toDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const fromDateKey = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const addDaysToDateKey = (dateKey: string, days: number) => {
+  const date = fromDateKey(dateKey);
+  date.setDate(date.getDate() + days);
+  return toDateKey(date);
+};
+
+const getNightsBetween = (checkIn: string, checkOut: string) => {
+  const start = fromDateKey(checkIn);
+  const end = fromDateKey(checkOut);
+  const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+  const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+  return Math.max(1, Math.round((endUtc - startUtc) / 86400000));
+};
+
+const formatStayDate = (dateKey: string) =>
+  fromDateKey(dateKey).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+const formatFooterDate = (dateKey: string) =>
+  fromDateKey(dateKey).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+  });
+
 const HotelDetails = () => {
   const router = useRouter();
-  const nights = 2;
+  const [checkInDate, setCheckInDate] = useState(() => toDateKey(new Date()));
+  const [checkOutDate, setCheckOutDate] = useState(() =>
+    addDaysToDateKey(toDateKey(new Date()), 2),
+  );
+  const [calendarVisible, setCalendarVisible] = useState(false);
+  const [calendarTarget, setCalendarTarget] = useState<"checkIn" | "checkOut">("checkIn");
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+  const nights = getNightsBetween(checkInDate, checkOutDate);
   const entranceAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -59,7 +108,7 @@ const HotelDetails = () => {
   const roomTypes: RoomType[] = [
     {
       id: "single",
-      name: "Single Room",
+      name: "Single",
       bed: "1 Single Bed",
       price: 2000,
       maxAdults: 2,
@@ -73,7 +122,7 @@ const HotelDetails = () => {
     },
     {
       id: "double",
-      name: "Double Room",
+      name: "Double",
       bed: "1 Double Bed",
       price: 3500,
       maxAdults: 3,
@@ -87,7 +136,7 @@ const HotelDetails = () => {
     },
     {
       id: "twin",
-      name: "Twin Room",
+      name: "Twin",
       bed: "2 Single Beds",
       price: 3500,
       maxAdults: 6,
@@ -101,7 +150,7 @@ const HotelDetails = () => {
     },
     {
       id: "deluxe",
-      name: "Deluxe Room",
+      name: "Deluxe",
       bed: "1 King Size Bed",
       price: 5000,
       maxAdults: 4,
@@ -135,6 +184,43 @@ const HotelDetails = () => {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [expandedRoomId, setExpandedRoomId] = useState<string | null>(null);
+
+  const openCalendar = (target: "checkIn" | "checkOut") => {
+    setCalendarTarget(target);
+    const selectedDate = target === "checkIn" ? checkInDate : checkOutDate;
+    const date = fromDateKey(selectedDate);
+    setCalendarMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+    setCalendarVisible(true);
+  };
+
+  const selectCalendarDate = (date: Date) => {
+    const selectedDate = toDateKey(date);
+    if (calendarTarget === "checkIn") {
+      setCheckInDate(selectedDate);
+      if (getNightsBetween(selectedDate, checkOutDate) === 1 && selectedDate >= checkOutDate) {
+        setCheckOutDate(addDaysToDateKey(selectedDate, 1));
+      }
+    } else if (selectedDate > checkInDate) {
+      setCheckOutDate(selectedDate);
+    }
+    setBookingConfirmed(false);
+    setCalendarVisible(false);
+  };
+
+  const todayDateKey = toDateKey(new Date());
+  const calendarFirstDay = new Date(
+    calendarMonth.getFullYear(),
+    calendarMonth.getMonth(),
+    1,
+  );
+  const calendarDays = Array.from({ length: 42 }, (_, index) =>
+    new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth(),
+      1 - calendarFirstDay.getDay() + index,
+    ),
+  );
 
   const selectedRoom =
     roomTypes.find((room) => room.id === selectedRoomId) ?? roomTypes[0];
@@ -184,7 +270,7 @@ const HotelDetails = () => {
           };
         })
         .filter((item) => item.quantity > 0),
-    [roomQuantities, roomOptions],
+    [roomQuantities, roomOptions, nights],
   );
 
   const totalCost = roomBreakdown.reduce((sum, item) => sum + item.lineTotal, 0);
@@ -335,20 +421,87 @@ const HotelDetails = () => {
           </View>
         </View>
 
-        {/* Property highlights */}
+        {/* Room selection strip - compact like the reference design */}
         <View style={styles.propertyStatsCard}>
-          {[
-            { icon: "bed-outline", value: "8", label: "Beds" },
-            { icon: "water-outline", value: "4", label: "Baths" },
-            { icon: "car-sport-outline", value: "2", label: "Garage" },
-            { icon: "resize-outline", value: "6,500", label: "Sqft" },
-          ].map((item, index) => (
-            <View key={item.label} style={styles.propertyStatItem}>
-              <Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={20} color="#172033" />
-              <Text style={styles.propertyStatValue}>{item.value}</Text>
-              <Text style={styles.propertyStatLabel}>{item.label}</Text>
+          <View style={styles.roomStripHeader}>
+            <View>
+              <Text style={styles.roomStripTitle}>Choose Your Room</Text>
+              <Text style={styles.roomStripSubtitle}>Select room type and quantity</Text>
             </View>
-          ))}
+            <View style={styles.roomStripBadge}>
+              <Text style={styles.roomStripBadgeText}>{totalRooms} selected</Text>
+            </View>
+          </View>
+
+          <View style={styles.roomStripGrid}>
+            {roomTypes.map((room, index) => {
+              const quantity = roomQuantities[room.id] ?? 0;
+              const isSelected = selectedRoomId === room.id;
+              const isExpanded = expandedRoomId === room.id;
+              const colors = ["#596BE8", "#E36BA5", "#16A69D", "#E99A43"];
+              // Distinct icons make each room category easier to recognise.
+              const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
+                single: "person-outline",
+                double: "bed-outline",
+                twin: "people-outline",
+                deluxe: "sparkles-outline",
+              };
+              return (
+                <View key={room.id} style={[styles.roomStripItem, isSelected && { backgroundColor: `${colors[index]}0D` }]}>
+                  <Pressable
+                    onPress={() => handleRoomSelect(room)}
+                    style={styles.roomStripSelectArea}
+                  >
+                    <View style={[styles.roomStripIcon, { backgroundColor: `${colors[index]}18` }]}>
+                      <Ionicons name={icons[room.id] ?? "bed-outline"} size={21} color={colors[index]} />
+                    </View>
+                    <Text numberOfLines={1} style={[styles.roomStripName, isSelected && { color: colors[index] }]}>{room.name}</Text>
+                    <Text style={styles.roomStripPrice}>₹{room.price.toLocaleString("en-IN")}</Text>
+                  </Pressable>
+
+                  <View style={styles.roomStripCounter}>
+                    <Pressable
+                      accessibilityLabel={`Remove one ${room.name}`}
+                      disabled={quantity === 0}
+                      onPress={() => updateRoomQuantity(room.id, -1)}
+                      style={[styles.roomStripCounterButton, quantity === 0 && styles.roomStripCounterDisabled]}
+                    >
+                      <Ionicons name="remove" size={15} color={quantity === 0 ? "#AAB1BF" : colors[index]} />
+                    </Pressable>
+                    <Text style={styles.roomStripQuantity}>{quantity}</Text>
+                    <Pressable
+                      accessibilityLabel={`Add one ${room.name}`}
+                      disabled={quantity >= 10}
+                      onPress={() => updateRoomQuantity(room.id, 1)}
+                      style={[styles.roomStripCounterButton, styles.roomStripAddButton, { backgroundColor: colors[index] }]}
+                    >
+                      <Ionicons name="add" size={15} color="#FFFFFF" />
+                    </Pressable>
+                  </View>
+
+                  <Pressable
+                    onPress={() => { handleRoomSelect(room); setExpandedRoomId(isExpanded ? null : room.id); }}
+                    style={styles.roomStripDetailsToggle}
+                  >
+                    <Text style={[styles.roomStripDetailsText, { color: colors[index] }]}>{isExpanded ? "Hide details" : ""}</Text>
+                    <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={12} color={colors[index]} />
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+
+          {roomTypes.map((room, index) => expandedRoomId === room.id ? (
+            <View key={`details-${room.id}`} style={styles.roomStripExpanded}>
+              <Text style={styles.roomStripExpandedTitle}>{room.name} details</Text>
+              {[room.bed, `Maximum ${room.maxAdults} adults`, `Maximum ${room.maxChildren} children`, ...room.features].map((feature, i) => (
+                <View key={`${room.id}-detail-${i}`} style={styles.roomStripFeatureRow}>
+                  <Ionicons name="checkmark-circle" size={14} color={["#596BE8", "#E36BA5", "#16A69D", "#E99A43"][index]} />
+                  <Text style={styles.roomStripFeatureText}>{feature}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null)}
         </View>
 
         {/* Compact photo collage */}
@@ -415,110 +568,37 @@ const HotelDetails = () => {
         <View style={styles.dateGuestCard}>
           <Text style={styles.sectionHeading}>Your Stay</Text>
           <View style={styles.stayDatesRow}>
-            <View style={styles.stayDateItem}>
+            <Pressable
+              style={styles.stayDateItem}
+              onPress={() => openCalendar("checkIn")}
+              accessibilityRole="button"
+              accessibilityLabel={`Change check-in date, currently ${formatStayDate(checkInDate)}`}
+            >
               <Ionicons name="calendar-outline" size={19} color="#00194a" />
               <View>
                 <Text style={styles.stayDateLabel}>Check-in</Text>
-                <Text style={styles.stayDateValue}>12 Aug 2026</Text>
-                <Text style={styles.stayDateTime}>From 2:00 PM</Text>
+                <Text style={styles.stayDateValue}>{formatStayDate(checkInDate)}</Text>
+                <Text style={styles.stayDateTime}>From 2:00 PM · Change</Text>
               </View>
-            </View>
+            </Pressable>
             <View style={styles.stayDateDivider} />
-            <View style={styles.stayDateItem}>
+            <Pressable
+              style={styles.stayDateItem}
+              onPress={() => openCalendar("checkOut")}
+              accessibilityRole="button"
+              accessibilityLabel={`Change check-out date, currently ${formatStayDate(checkOutDate)}`}
+            >
               <Ionicons name="calendar-outline" size={19} color="#00194a" />
               <View>
                 <Text style={styles.stayDateLabel}>Check-out</Text>
-                <Text style={styles.stayDateValue}>14 Aug 2026</Text>
-                <Text style={styles.stayDateTime}>Until 11:00 AM</Text>
+                <Text style={styles.stayDateValue}>{formatStayDate(checkOutDate)}</Text>
+                <Text style={styles.stayDateTime}>Until 11:00 AM · Change</Text>
               </View>
-            </View>
+            </Pressable>
           </View>
-          <Text style={styles.stayHint}>2 nights · Update these sample dates to match your booking flow.</Text>
+          <Text style={styles.stayHint}>{nights} {nights === 1 ? "night" : "nights"} · Tap either date to update your stay.</Text>
         </View>
 
-        <Animated.View
-          style={[
-            styles.sectionBlock,
-            styles.glassSection,
-            {
-              opacity: entranceAnim,
-              transform: [{ translateY: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [22, 0] }) }],
-            },
-          ]}
-        >
-          <View style={styles.roomSectionHeader}>
-            <View style={styles.roomSectionIcon}>
-              <Ionicons name="bed-outline" size={22} color="#ffffff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionHeading}>Choose Your Rooms</Text>
-              <Text style={styles.sectionSubtitle}>Choose your room type and set how many you need.</Text>
-            </View>
-            <View style={styles.roomCountBadge}>
-              <Text style={styles.roomCountBadgeText}>{totalRooms} selected</Text>
-            </View>
-          </View>
-
-          {roomTypes.map((room, index) => {
-            const quantity = roomQuantities[room.id] ?? 0;
-            const isSelected = selectedRoom.id === room.id;
-            const accentColors = ["#5b6cff", "#e56ca8", "#16a6a1", "#f39b45"];
-            return (
-              <Animated.View
-                key={room.id}
-                style={{
-                  opacity: entranceAnim,
-                  transform: [{ translateY: entranceAnim.interpolate({ inputRange: [0, 1], outputRange: [18 + index * 4, 0] }) }],
-                }}
-              >
-                <Pressable
-                  onPress={() => handleRoomSelect(room)}
-                  style={[
-                    styles.roomCard,
-                    styles.glassRoomCard,
-                    isSelected && styles.roomCardSelected,
-                    isSelected && { borderColor: accentColors[index] },
-                  ]}
-                >
-                  <View style={[styles.roomAccentBar, { backgroundColor: accentColors[index] }]} />
-                  <View style={[styles.roomImagePlaceholder, { backgroundColor: `${accentColors[index]}18` }]}>
-                    <Ionicons name="bed" size={27} color={accentColors[index]} />
-                    <View style={styles.roomImageSparkle}><Ionicons name="sparkles" size={11} color={accentColors[index]} /></View>
-                  </View>
-                  <View style={styles.roomInfo}>
-                    <View style={styles.roomTitleLine}>
-                      <Text style={styles.roomName}>{room.name}</Text>
-                      {isSelected && <Ionicons name="checkmark-circle" size={18} color={accentColors[index]} />}
-                    </View>
-                    <Text style={styles.roomBed}>{room.bed}</Text>
-                    <View style={styles.roomMetaLine}>
-                      <Ionicons name="people-outline" size={13} color="#7a849a" />
-                      <Text style={styles.roomCapacity}>Up to {room.maxAdults + room.maxChildren} guests</Text>
-                    </View>
-                    <Text style={styles.roomPrice}>₹{room.price.toLocaleString("en-IN")} <Text style={styles.perNight}>/ night</Text></Text>
-                  </View>
-                  <View style={styles.quantityControls}>
-                    <Pressable
-                      accessibilityLabel={`Remove one ${room.name}`}
-                      onPress={(event) => { event.stopPropagation?.(); updateRoomQuantity(room.id, -1); }}
-                      style={[styles.quantityButton, quantity === 0 && styles.quantityButtonMuted]}
-                    >
-                      <Ionicons name="remove" size={17} color={quantity === 0 ? "#a6afbf" : "#172033"} />
-                    </Pressable>
-                    <Text style={styles.quantityValue}>{quantity}</Text>
-                    <Pressable
-                      accessibilityLabel={`Add one ${room.name}`}
-                      onPress={(event) => { event.stopPropagation?.(); updateRoomQuantity(room.id, 1); }}
-                      style={[styles.quantityButton, styles.quantityButtonActive, { backgroundColor: accentColors[index] }]}
-                    >
-                      <Ionicons name="add" size={18} color="#ffffff" />
-                    </Pressable>
-                  </View>
-                </Pressable>
-              </Animated.View>
-            );
-          })}
-        </Animated.View>
 
 <View style={styles.sectionBlock}>
   <Text style={styles.sectionHeading}>
@@ -818,33 +898,153 @@ const HotelDetails = () => {
         </Animated.View>
       </ScrollView>
 
-      {/* Fixed bottom action bar inspired by the reference design */}
+      {/* Fixed booking bar: check-in / total / check-out */}
       <View style={styles.bottomContainer}>
-        <View style={styles.footerPriceBlock}>
-          <Text style={styles.footerPrice}>₹{totalCost.toLocaleString("en-IN")}</Text>
-          <Text style={styles.footerPriceLabel}>Total Price</Text>
-        </View>
         <Pressable
-          style={styles.scheduleVisitButton}
-          onPress={() => {
-            setBookingConfirmed(false);
-            setShowBookingModal(true);
-          }}
+          style={styles.footerDateButton}
+          onPress={() => openCalendar("checkIn")}
+          accessibilityRole="button"
+          accessibilityLabel={`Select check-in date, ${formatStayDate(checkInDate)}`}
         >
-          <Text style={styles.scheduleVisitText}>Schedule Visit</Text>
+          <Text style={styles.footerDateLabel}>CHECK-IN</Text>
+          <View style={styles.footerDateValueRow}>
+            <Ionicons name="calendar-outline" size={14} color="#172033" />
+            <Text style={styles.footerDateValue}>{formatFooterDate(checkInDate)}</Text>
+          </View>
         </Pressable>
+
         <Pressable
-          style={[styles.footerBookButton, totalRooms === 0 && styles.disabledButton]}
-          disabled={totalRooms === 0}
+          style={styles.footerTotalButton}
           onPress={() => {
             setBookingConfirmed(false);
             setShowBookingModal(true);
           }}
+          accessibilityRole="button"
+          accessibilityLabel={`Booking total ${totalCost} rupees for ${nights} nights`}
         >
-          <Text style={styles.footerBookText}>Book Now</Text>
-          <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+          <Text style={styles.footerTotalPrice}>₹{totalCost.toLocaleString("en-IN")}</Text>
+          <Text style={styles.footerTotalLabel}>TOTAL · {nights} {nights === 1 ? "NIGHT" : "NIGHTS"}</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.footerDateButton}
+          onPress={() => openCalendar("checkOut")}
+          accessibilityRole="button"
+          accessibilityLabel={`Select check-out date, ${formatStayDate(checkOutDate)}`}
+        >
+          <Text style={styles.footerDateLabel}>CHECK-OUT</Text>
+          <View style={styles.footerDateValueRow}>
+            <Ionicons name="calendar-outline" size={14} color="#172033" />
+            <Text style={styles.footerDateValue}>{formatFooterDate(checkOutDate)}</Text>
+          </View>
         </Pressable>
       </View>
+
+      {/* Date selection calendar */}
+      <Modal
+        visible={calendarVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCalendarVisible(false)}
+      >
+        <View style={styles.calendarOverlay}>
+          <View style={styles.calendarCard}>
+            <View style={styles.calendarHeader}>
+              <View>
+                <Text style={styles.calendarEyebrow}>SELECT YOUR STAY</Text>
+                <Text style={styles.calendarTitle}>
+                  {calendarTarget === "checkIn" ? "Check-in date" : "Check-out date"}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setCalendarVisible(false)}
+                style={styles.calendarCloseButton}
+                accessibilityLabel="Close calendar"
+              >
+                <Ionicons name="close" size={21} color="#172033" />
+              </Pressable>
+            </View>
+
+            <View style={styles.calendarMonthRow}>
+              <Pressable
+                style={styles.calendarArrow}
+                disabled={
+                  calendarMonth.getFullYear() === new Date().getFullYear() &&
+                  calendarMonth.getMonth() === new Date().getMonth()
+                }
+                onPress={() =>
+                  setCalendarMonth((month) =>
+                    new Date(month.getFullYear(), month.getMonth() - 1, 1),
+                  )
+                }
+              >
+                <Ionicons name="chevron-back" size={19} color="#172033" />
+              </Pressable>
+              <Text style={styles.calendarMonthTitle}>
+                {calendarMonth.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+              </Text>
+              <Pressable
+                style={styles.calendarArrow}
+                onPress={() =>
+                  setCalendarMonth((month) =>
+                    new Date(month.getFullYear(), month.getMonth() + 1, 1),
+                  )
+                }
+              >
+                <Ionicons name="chevron-forward" size={19} color="#172033" />
+              </Pressable>
+            </View>
+
+            <View style={styles.calendarWeekRow}>
+              {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
+                <Text key={day} style={styles.calendarWeekDay}>{day}</Text>
+              ))}
+            </View>
+
+            <View style={styles.calendarGrid}>
+              {calendarDays.map((date) => {
+                const dateKey = toDateKey(date);
+                const isCurrentMonth = date.getMonth() === calendarMonth.getMonth();
+                const isPast = dateKey < todayDateKey;
+                const isBeforeCheckIn = calendarTarget === "checkOut" && dateKey <= checkInDate;
+                const disabled = !isCurrentMonth || isPast || isBeforeCheckIn;
+                const selected = dateKey === (calendarTarget === "checkIn" ? checkInDate : checkOutDate);
+                const isToday = dateKey === todayDateKey;
+                return (
+                  <Pressable
+                    key={dateKey}
+                    disabled={disabled}
+                    onPress={() => selectCalendarDate(date)}
+                    style={[
+                      styles.calendarDay,
+                      selected && styles.calendarDaySelected,
+                      isToday && !selected && styles.calendarDayToday,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.calendarDayText,
+                        !isCurrentMonth && styles.calendarDayOutside,
+                        disabled && styles.calendarDayDisabled,
+                        selected && styles.calendarDayTextSelected,
+                      ]}
+                    >
+                      {date.getDate()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View style={styles.calendarFooter}>
+              <Text style={styles.calendarFooterText}>
+                {formatStayDate(checkInDate)}  →  {formatStayDate(checkOutDate)}
+              </Text>
+              <Text style={styles.calendarNightsText}>{nights} {nights === 1 ? "night" : "nights"}</Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Booking confirmation modal */}
       <Modal
@@ -1034,21 +1234,37 @@ const styles = StyleSheet.create({
   propertyStatsCard: {
     marginHorizontal: 16,
     marginTop: -1,
-    paddingVertical: 15,
-    paddingHorizontal: 5,
+    padding: 12,
     backgroundColor: "#fff",
     borderRadius: 18,
-    flexDirection: "row",
-    justifyContent: "space-around",
     elevation: 4,
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
   },
-  propertyStatItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, borderRightWidth: 1, borderRightColor: "#f0f1f4" },
-  propertyStatValue: { fontSize: 13, fontWeight: "800", color: "#172033" },
-  propertyStatLabel: { fontSize: 10, color: "#737987" },
+  roomStripHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 11, paddingHorizontal: 2 },
+  roomStripTitle: { fontSize: 14, fontWeight: "800", color: "#172033" },
+  roomStripSubtitle: { fontSize: 10, color: "#9299A8", marginTop: 3 },
+  roomStripBadge: { backgroundColor: "#EEF0FF", paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 },
+  roomStripBadgeText: { color: "#596BE8", fontSize: 10, fontWeight: "800" },
+  roomStripGrid: { flexDirection: "row", alignItems: "stretch" },
+  roomStripItem: { flex: 1, minWidth: 0, alignItems: "center", paddingHorizontal: 3, paddingVertical: 8, borderRadius: 11, borderRightWidth: 1, borderRightColor: "#F0F1F5" },
+  roomStripSelectArea: { alignItems: "center", width: "100%" },
+  roomStripIcon: { width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center", marginBottom: 5 },
+  roomStripName: { fontSize: 9, fontWeight: "700", color: "#687184", textAlign: "center" },
+  roomStripPrice: { fontSize: 10, fontWeight: "800", color: "#172033", marginTop: 3 },
+  roomStripCounter: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 8 },
+  roomStripCounterButton: { width: 23, height: 23, borderRadius: 8, backgroundColor: "#F0F2FA", alignItems: "center", justifyContent: "center" },
+  roomStripCounterDisabled: { backgroundColor: "#F5F6F8" },
+  roomStripAddButton: { backgroundColor: "#596BE8" },
+  roomStripQuantity: { minWidth: 12, textAlign: "center", fontSize: 11, fontWeight: "800", color: "#172033" },
+  roomStripDetailsToggle: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 7 },
+  roomStripDetailsText: { fontSize: 9, fontWeight: "700" },
+  roomStripExpanded: { marginTop: 11, padding: 11, borderRadius: 12, backgroundColor: "#F7F8FC" },
+  roomStripExpandedTitle: { fontSize: 12, fontWeight: "800", color: "#172033", marginBottom: 8 },
+  roomStripFeatureRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 6 },
+  roomStripFeatureText: { fontSize: 10, color: "#697386" },
   galleryGrid: { marginHorizontal: 14, marginTop: 12, flexDirection: "row", gap: 8, height: 170 },
   galleryLargeColumn: { flex: 1.08, position: "relative" },
   galleryLargeImage: { width: "100%", height: "100%", borderRadius: 15 },
@@ -1488,11 +1704,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    minHeight: 78,
-    backgroundColor: "#fff",
+    minHeight: 76,
+    backgroundColor: "#ffffff",
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
@@ -1502,35 +1719,115 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: -3 },
     zIndex: 100,
-    gap: 8,
+    gap: 7,
   },
-  footerPriceBlock: { width: 92, justifyContent: "center" },
-  footerPrice: { fontSize: 14, fontWeight: "800", color: "#172033" },
-  footerPriceLabel: { fontSize: 11, color: "#737987", marginTop: 3 },
-  scheduleVisitButton: {
+  footerDateButton: {
     flex: 1,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d9c9a7",
-    alignItems: "center",
+    minWidth: 0,
+    height: 48,
     justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
-  scheduleVisitText: { color: "#4f4a40", fontSize: 11, fontWeight: "700" },
-  footerBookButton: {
-    flex: 1.05,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#172033",
-    flexDirection: "row",
+  footerDateLabel: {
+    color: "#7a8291",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    marginBottom: 5,
+  },
+  footerDateValueRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  footerDateValue: { color: "#172033", fontSize: 12, fontWeight: "800" },
+  footerTotalButton: {
+    flex: 1.25,
+    minWidth: 0,
+    height: 52,
+    borderRadius: 13,
+    backgroundColor: "#e53935",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
     paddingHorizontal: 5,
   },
-  footerBookText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  footerTotalPrice: { color: "#ffffff", fontSize: 15, fontWeight: "900" },
+  footerTotalLabel: {
+    color: "#ffffff",
+    fontSize: 8,
+    fontWeight: "800",
+    letterSpacing: 0.55,
+    marginTop: 3,
+  },
+  calendarOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(9, 18, 35, 0.52)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 18,
+  },
+  calendarCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#ffffff",
+    borderRadius: 22,
+    padding: 18,
+    elevation: 18,
+  },
+  calendarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  calendarEyebrow: { color: "#e53935", fontSize: 9, fontWeight: "900", letterSpacing: 1.2 },
+  calendarTitle: { color: "#172033", fontSize: 20, fontWeight: "900", marginTop: 4 },
+  calendarCloseButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#f1f3f7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calendarMonthRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 18,
+    marginBottom: 13,
+  },
+  calendarArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#f3f5f9",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calendarMonthTitle: { color: "#172033", fontSize: 15, fontWeight: "800" },
+  calendarWeekRow: { flexDirection: "row", marginBottom: 5 },
+  calendarWeekDay: { width: `${100 / 7}%`, textAlign: "center", color: "#8992a3", fontSize: 9, fontWeight: "800", paddingVertical: 8 },
+  calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
+  calendarDay: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+  },
+  calendarDaySelected: { backgroundColor: "#e53935" },
+  calendarDayToday: { borderWidth: 1.3, borderColor: "#e53935" },
+  calendarDayText: { color: "#172033", fontSize: 13, fontWeight: "600" },
+  calendarDayOutside: { color: "#c6cbd4" },
+  calendarDayDisabled: { color: "#d5d9e0" },
+  calendarDayTextSelected: { color: "#ffffff", fontWeight: "900" },
+  calendarFooter: {
+    borderTopWidth: 1,
+    borderTopColor: "#edf0f5",
+    marginTop: 13,
+    paddingTop: 13,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  calendarFooterText: { color: "#596579", fontSize: 11, fontWeight: "700" },
+  calendarNightsText: { color: "#e53935", fontSize: 11, fontWeight: "900" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
