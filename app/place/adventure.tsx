@@ -110,6 +110,8 @@ export default function AdventureScreen() {
   const [selected, setSelected] = useState(1);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+const [person, setperson]= useState("");
+const [adventure, setadventure]= useState("");
 
   const listRef = useRef<FlatList<Adventure>>(null);
   const activeAdventure = adventures[selected];
@@ -139,7 +141,13 @@ export default function AdventureScreen() {
       },
     ]);
   };
-
+const choosePerson = () => {
+  Alert.alert("Choose People", "Select number of people", [
+    { text: "1", onPress: () => setperson("1") },
+    { text: "2", onPress: () => setperson("2") },
+    { text: "3", onPress: () => setperson("3") },
+  ]);
+};
   const chooseTime = () => {
     Alert.alert("Choose time", "Select an available time slot", [
       {
@@ -160,12 +168,14 @@ export default function AdventureScreen() {
       },
     ]);
   };
+  
+  
 
   const handleBooking = () => {
-    if (!date || !time) {
+    if (!date || !time || !person || !adventure) {
       Alert.alert(
         "Choose your schedule",
-        "Please select a date and time before booking."
+        "Please select a date, time, number of people, and adventure before booking."
       );
       return;
     }
@@ -186,6 +196,7 @@ export default function AdventureScreen() {
       ]
     );
   };
+
 
   return (
     <View style={styles.container}>
@@ -286,6 +297,7 @@ export default function AdventureScreen() {
 
                   {/* DURATION AND PRICE */}
 
+
                   <View style={styles.statsRow}>
                     <View style={styles.statBox}>
                       <Ionicons
@@ -351,6 +363,37 @@ export default function AdventureScreen() {
                         color="#D4E5E3"
                       />
                     </TouchableOpacity>
+
+<TouchableOpacity
+                      style={styles.scheduleButton}
+                      onPress={choosePerson}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="person-outline"
+                        size={19}
+                        color="#86F3D4"
+                      />
+
+                      <View style={styles.scheduleText}>
+                        <Text style={styles.miniLabel}>PERSON</Text>
+                        <Text style={styles.scheduleValue} numberOfLines={1}>
+                          {person || "Select person"}
+                        </Text>
+                      </View>
+
+                      <Ionicons
+                        name="chevron-down"
+                        size={14}
+                        color="#D4E5E3"
+                      />
+                    </TouchableOpacity>
+
+
+
+
+
+
 
                     <TouchableOpacity
                       style={styles.scheduleButton}
@@ -533,6 +576,7 @@ export default function AdventureScreen() {
 }
 
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
     backgroundColor: "#062D30",
@@ -721,7 +765,49 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 13,
   },
+personContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: 14,
+  borderRadius: 14,
+  backgroundColor: "rgba(255,255,255,0.12)",
+},
 
+personInfo: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 10,
+},
+
+personText: {
+  color: "#fff",
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+counter: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 18,
+},
+
+counterButton: {
+  width: 34,
+  height: 34,
+  borderRadius: 10,
+  backgroundColor: "rgba(255,255,255,0.2)",
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+personCount: {
+  color: "#fff",
+  fontSize: 17,
+  fontWeight: "700",
+  minWidth: 20,
+  textAlign: "center",
+},
   scheduleButton: {
     flex: 1,
     minWidth: 0,
